@@ -1,10 +1,10 @@
-import { useState } from "react"
-import { Checkbox } from "./ui/checkbox"
-import { ScrollArea } from "./ui/scroll-area"
-import { ChevronRight, ChevronDown, File, Folder } from "lucide-react"
-import { cn } from "../lib/utils"
-import { useTheme } from "./theme-provider"
-import type { FileItem } from "../types"
+import { ChevronDown, ChevronRight, File, Folder } from 'lucide-react'
+import { useState } from 'react'
+import { cn } from '../lib/utils'
+import type { FileItem } from '../types'
+import { useTheme } from './theme-provider'
+import { Checkbox } from './ui/checkbox'
+import { ScrollArea } from './ui/scroll-area'
 
 interface FileExplorerProps {
   data: FileItem[]
@@ -16,7 +16,7 @@ export function FileExplorer({ data, selectedFiles, onSelectionChange }: FileExp
   return (
     <ScrollArea className="h-full">
       <div className="p-2">
-        {data.map((item) => (
+        {data.map(item => (
           <FileTreeNode
             key={item.path}
             item={item}
@@ -44,7 +44,7 @@ function FileTreeNode({ item, level, selectedFiles, onSelectionChange }: FileTre
 
   // Function to handle folder expansion/collapse
   const handleToggle = () => {
-    if (item.file_type === "Directory") {
+    if (item.file_type === 'Directory') {
       setExpanded(!expanded)
     }
   }
@@ -58,18 +58,18 @@ function FileTreeNode({ item, level, selectedFiles, onSelectionChange }: FileTre
   }
 
   const handleCheckboxChange = (checked: boolean) => {
-    if (item.file_type === "File") {
+    if (item.file_type === 'File') {
       if (checked) {
         onSelectionChange([...selectedFiles, item.path])
       } else {
-        onSelectionChange(selectedFiles.filter((path) => path !== item.path))
+        onSelectionChange(selectedFiles.filter(path => path !== item.path))
       }
-    } else if (item.file_type === "Directory") {
+    } else if (item.file_type === 'Directory') {
       // Get all file paths in this folder and its subfolders
       const getAllFilePaths = (node: FileItem): string[] => {
-        if (node.file_type === "File") return [node.path]
+        if (node.file_type === 'File') return [node.path]
 
-        return (node.children || []).flatMap((child) => getAllFilePaths(child))
+        return (node.children || []).flatMap(child => getAllFilePaths(child))
       }
 
       const filePaths = getAllFilePaths(item)
@@ -80,7 +80,7 @@ function FileTreeNode({ item, level, selectedFiles, onSelectionChange }: FileTre
         onSelectionChange(newSelection)
       } else {
         // Remove all files in this folder
-        onSelectionChange(selectedFiles.filter((path) => !filePaths.includes(path)))
+        onSelectionChange(selectedFiles.filter(path => !filePaths.includes(path)))
       }
     }
   }
@@ -89,18 +89,18 @@ function FileTreeNode({ item, level, selectedFiles, onSelectionChange }: FileTre
     <div>
       <div
         className={cn(
-          "flex items-center py-1 px-1 rounded-sm group",
-          `hover:bg-${theme === "dark" ? "[#222]" : "[#e5e5e5]"} cursor-pointer`,
+          'flex items-center py-1 px-1 rounded-sm group',
+          `hover:bg-${theme === 'dark' ? '[#222]' : '[#e5e5e5]'} cursor-pointer`
         )}
         style={{ paddingLeft: `${level * 12}px` }}
       >
-        {item.file_type === "Directory" ? (
+        {item.file_type === 'Directory' ? (
           <button
             type="button"
             onClick={handleToggle}
             onKeyDown={handleKeyDown}
             className="mr-1 h-4 w-4 flex items-center justify-center text-muted-foreground"
-            aria-label={expanded ? "Collapse folder" : "Expand folder"}
+            aria-label={expanded ? 'Collapse folder' : 'Expand folder'}
           >
             {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </button>
@@ -115,27 +115,30 @@ function FileTreeNode({ item, level, selectedFiles, onSelectionChange }: FileTre
           aria-label={`Select ${item.name}`}
         />
 
-        <span
-          className="flex items-center gap-2 text-sm"
+        <button
+          type="button"
+          className="flex items-center gap-2 text-sm text-left w-full"
           onClick={handleToggle}
           onKeyDown={handleKeyDown}
-          role="button"
-          tabIndex={0}
         >
-          {item.file_type === "Directory" ? (
+          {item.file_type === 'Directory' ? (
             <Folder size={14} className="text-muted-foreground" />
           ) : (
             <File size={14} className="text-muted-foreground" />
           )}
           <span className="truncate">{item.name}</span>
 
-          {item.size && <span className="text-xs text-muted-foreground ml-auto">{formatFileSize(item.size)}</span>}
-        </span>
+          {item.size && (
+            <span className="text-xs text-muted-foreground ml-auto">
+              {formatFileSize(item.size)}
+            </span>
+          )}
+        </button>
       </div>
 
-      {item.file_type === "Directory" && expanded && item.children && (
+      {item.file_type === 'Directory' && expanded && item.children && (
         <div>
-          {item.children.map((child) => (
+          {item.children.map(child => (
             <FileTreeNode
               key={child.path}
               item={child}

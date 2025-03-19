@@ -1,6 +1,6 @@
-import * as React from "react"
+import * as React from 'react'
 
-type Theme = "dark" | "light"
+type Theme = 'dark' | 'light'
 
 type ThemeProviderProps = {
   children: React.ReactNode
@@ -13,18 +13,18 @@ type ThemeProviderState = {
 }
 
 const initialState: ThemeProviderState = {
-  theme: "dark",
+  theme: 'dark',
   setTheme: () => null,
 }
 
 const ThemeContext = React.createContext<ThemeProviderState>(initialState)
 
-export function ThemeProvider({ children, defaultTheme = "dark", ...props }: ThemeProviderProps) {
+export function ThemeProvider({ children, defaultTheme = 'dark', ...props }: ThemeProviderProps) {
   const [theme, setTheme] = React.useState<Theme>(defaultTheme)
 
   React.useEffect(() => {
     // Check if we have a theme preference in localStorage
-    const storedTheme = localStorage.getItem("theme") as Theme | null
+    const storedTheme = localStorage.getItem('theme') as Theme | null
     if (storedTheme) {
       setTheme(storedTheme)
     }
@@ -34,13 +34,13 @@ export function ThemeProvider({ children, defaultTheme = "dark", ...props }: The
     const root = window.document.documentElement
 
     // Remove the old theme class
-    root.classList.remove("light", "dark")
+    root.classList.remove('light', 'dark')
 
     // Add the new theme class
     root.classList.add(theme)
 
     // Save the theme preference
-    localStorage.setItem("theme", theme)
+    localStorage.setItem('theme', theme)
   }, [theme])
 
   const value = {
@@ -60,7 +60,7 @@ export function ThemeProvider({ children, defaultTheme = "dark", ...props }: The
 export const useTheme = () => {
   const context = React.useContext(ThemeContext)
 
-  if (context === undefined) throw new Error("useTheme must be used within a ThemeProvider")
+  if (context === undefined) throw new Error('useTheme must be used within a ThemeProvider')
 
   return context
 }

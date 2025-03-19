@@ -1,13 +1,13 @@
-import { useState } from "react"
-import { Button } from "./ui/button"
-import { Input } from "./ui/input"
-import { ScrollArea } from "./ui/scroll-area"
-import { Badge } from "./ui/badge"
-import { Save, Search, Tag, X, ChevronDown, ChevronUp, Bookmark } from "lucide-react"
-import { cn } from "../lib/utils"
-import { useTheme } from "./theme-provider"
-import { usePrompts } from "../hooks/use-prompts"
-import type { Prompt, PromptTag } from "../types"
+import { Bookmark, ChevronDown, ChevronUp, Save, Search, Tag, Trash2, X } from 'lucide-react'
+import { useState } from 'react'
+import { usePrompts } from '../hooks/use-prompts'
+import { cn } from '../lib/utils'
+import type { Prompt, PromptTag } from '../types'
+import { useTheme } from './theme-provider'
+import { Badge } from './ui/badge'
+import { Button } from './ui/button'
+import { Input } from './ui/input'
+import { ScrollArea } from './ui/scroll-area'
 
 interface PromptLibraryProps {
   currentPrompt: string
@@ -15,24 +15,24 @@ interface PromptLibraryProps {
 }
 
 export function PromptLibrary({ currentPrompt, onPromptChange }: PromptLibraryProps) {
-  const { prompts, savePrompt, deletePrompt: removePrompt } = usePrompts();
-  const [promptName, setPromptName] = useState("")
+  const { prompts, savePrompt, deletePrompt } = usePrompts()
+  const [promptName, setPromptName] = useState('')
   const [promptTags, setPromptTags] = useState<PromptTag[]>([])
-  const [currentTag, setCurrentTag] = useState("")
-  const [searchTerm, setSearchTerm] = useState("")
-  const [expandedCategories, setExpandedCategories] = useState<string[]>(["Recent", "All"])
+  const [currentTag, setCurrentTag] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [expandedCategories, setExpandedCategories] = useState<string[]>(['Recent', 'All'])
   const { theme } = useTheme()
 
   const handleSavePrompt = async () => {
     if (!promptName.trim() || !currentPrompt.trim()) return
 
-    await savePrompt(promptName, currentPrompt, promptTags);
-    setPromptName("");
-    setPromptTags([]);
+    await savePrompt(promptName, currentPrompt, promptTags)
+    setPromptName('')
+    setPromptTags([])
   }
 
   const handleDeletePrompt = async (id: string) => {
-    await removePrompt(id);
+    await deletePrompt(id)
   }
 
   const handleAddTag = () => {
@@ -43,15 +43,15 @@ export function PromptLibrary({ currentPrompt, onPromptChange }: PromptLibraryPr
 
     const newTag: PromptTag = {
       id: `tag-${Date.now()}`,
-      name: currentTag
+      name: currentTag,
     }
 
     setPromptTags([...promptTags, newTag])
-    setCurrentTag("")
+    setCurrentTag('')
   }
 
   const handleRemoveTag = (tagId: string) => {
-    setPromptTags(promptTags.filter((t) => t.id !== tagId))
+    setPromptTags(promptTags.filter(t => t.id !== tagId))
   }
 
   const handleUsePrompt = (content: string) => {
@@ -59,38 +59,38 @@ export function PromptLibrary({ currentPrompt, onPromptChange }: PromptLibraryPr
   }
 
   const toggleCategory = (category: string) => {
-    setExpandedCategories((prev) =>
-      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category],
+    setExpandedCategories(prev =>
+      prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category]
     )
   }
 
   // Group prompts by category (if category exists, otherwise use "Custom")
   const promptsByCategory = prompts.reduce(
     (acc, prompt) => {
-      const category = "Custom"; // Adjust if your backend has categories
+      const category = 'Custom' // Adjust if your backend has categories
       if (!acc[category]) {
         acc[category] = []
       }
       acc[category].push(prompt)
       return acc
     },
-    {} as Record<string, Prompt[]>,
+    {} as Record<string, Prompt[]>
   )
 
   // Filter prompts by search term
   const filteredPromptsByCategory = Object.entries(promptsByCategory).reduce(
     (acc, [category, categoryPrompts]) => {
       const filtered = categoryPrompts.filter(
-        (p) =>
+        p =>
           p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.tags.some((tag) => tag.name.toLowerCase().includes(searchTerm.toLowerCase())),
+          p.tags.some(tag => tag.name.toLowerCase().includes(searchTerm.toLowerCase()))
       )
       if (filtered.length > 0) {
         acc[category] = filtered
       }
       return acc
     },
-    {} as Record<string, Prompt[]>,
+    {} as Record<string, Prompt[]>
   )
 
   return (
@@ -102,7 +102,7 @@ export function PromptLibrary({ currentPrompt, onPromptChange }: PromptLibraryPr
           <Input
             placeholder="Prompt name"
             value={promptName}
-            onChange={(e) => setPromptName(e.target.value)}
+            onChange={e => setPromptName(e.target.value)}
             className="text-sm font-mono bg-secondary/50 border-border focus-visible:ring-primary"
           />
 
@@ -110,8 +110,8 @@ export function PromptLibrary({ currentPrompt, onPromptChange }: PromptLibraryPr
             <Input
               placeholder="Add tags"
               value={currentTag}
-              onChange={(e) => setCurrentTag(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
+              onChange={e => setCurrentTag(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleAddTag()}
               className="text-sm font-mono bg-secondary/50 border-border focus-visible:ring-primary flex-1"
             />
             <Button
@@ -127,14 +127,18 @@ export function PromptLibrary({ currentPrompt, onPromptChange }: PromptLibraryPr
 
           {promptTags.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">
-              {promptTags.map((tag) => (
+              {promptTags.map(tag => (
                 <Badge
                   key={tag.id}
                   variant="secondary"
                   className="text-xs bg-secondary text-foreground hover:bg-secondary/80"
                 >
                   {tag.name}
-                  <button type="button" onClick={() => handleRemoveTag(tag.id)} className="ml-1 hover:text-red-500">
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveTag(tag.id)}
+                    className="ml-1 hover:text-red-500"
+                  >
                     <X size={12} />
                   </button>
                 </Badge>
@@ -160,7 +164,7 @@ export function PromptLibrary({ currentPrompt, onPromptChange }: PromptLibraryPr
             placeholder="Search saved prompts..."
             className="pl-8 text-sm font-mono bg-secondary/50 border-border focus-visible:ring-primary"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={e => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
@@ -187,27 +191,39 @@ export function PromptLibrary({ currentPrompt, onPromptChange }: PromptLibraryPr
 
                 {expandedCategories.includes(category) && (
                   <div className="mt-1 space-y-1">
-                    {promptsInCategory.map((prompt) => (
-                      <button
-                        type="button"
+                    {promptsInCategory.map(prompt => (
+                      <div
                         key={prompt.id}
                         className={cn(
-                          "w-full text-left px-3 py-2 text-sm",
-                          `hover:bg-${theme === "dark" ? "[#222]" : "[#e5e5e5]"} transition-colors`,
-                          "flex items-start gap-2",
+                          'w-full text-left px-3 py-2 text-sm',
+                          `hover:bg-${theme === 'dark' ? '[#222]' : '[#e5e5e5]'} transition-colors`,
+                          'flex items-start gap-2'
                         )}
-                        onClick={() => handleUsePrompt(prompt.content)}
                       >
                         <Bookmark size={14} className="mt-0.5 text-muted-foreground" />
                         <div className="flex-1 overflow-hidden">
-                          <div className="font-medium truncate">{prompt.title}</div>
-                          <div className="text-xs text-muted-foreground truncate">
-                            {prompt.content.substring(0, 60)}
-                            {prompt.content.length > 60 ? "..." : ""}
+                          <div className="font-medium truncate flex items-center justify-between">
+                            <span>{prompt.title}</span>
+                            <button
+                              type="button"
+                              className="text-muted-foreground hover:text-red-500 ml-2"
+                              onClick={() => handleDeletePrompt(prompt.id)}
+                              aria-label={`Delete prompt: ${prompt.title}`}
+                            >
+                              <Trash2 size={14} />
+                            </button>
                           </div>
+                          <button
+                            type="button"
+                            className="text-xs text-muted-foreground truncate w-full text-left"
+                            onClick={() => handleUsePrompt(prompt.content)}
+                          >
+                            {prompt.content.substring(0, 60)}
+                            {prompt.content.length > 60 ? '...' : ''}
+                          </button>
                           {prompt.tags.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
-                              {prompt.tags.map((tag) => (
+                              {prompt.tags.map(tag => (
                                 <Badge
                                   key={tag.id}
                                   variant="outline"
@@ -219,7 +235,7 @@ export function PromptLibrary({ currentPrompt, onPromptChange }: PromptLibraryPr
                             </div>
                           )}
                         </div>
-                      </button>
+                      </div>
                     ))}
                   </div>
                 )}
