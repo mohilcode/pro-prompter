@@ -190,13 +190,29 @@ export function XmlMode({
             >
               <TabsTrigger
                 value="preview"
-                className={`data-[state=active]:${theme === 'dark' ? 'bg-[#222]' : 'bg-[#d5d5d5]'} data-[state=active]:text-primary data-[state=active]:shadow-none rounded-none px-3 py-1 h-7`}
+                className={`
+                  data-[state=active]:bg-${theme === 'dark' ? '[#222]' : '[#d5d5d5]'}
+                  data-[state=active]:text-primary
+                  data-[state=active]:shadow-none
+                  data-[state=active]:border-primary
+                  rounded-md px-3 py-1 h-7
+                  mx-0.5 border border-transparent
+                  transition-colors
+                `}
               >
                 Preview Changes
               </TabsTrigger>
               <TabsTrigger
                 value="xml"
-                className={`data-[state=active]:${theme === 'dark' ? 'bg-[#222]' : 'bg-[#d5d5d5]'} data-[state=active]:text-primary data-[state=active]:shadow-none rounded-none px-3 py-1 h-7`}
+                className={`
+                  data-[state=active]:bg-${theme === 'dark' ? '[#222]' : '[#d5d5d5]'}
+                  data-[state=active]:text-primary
+                  data-[state=active]:shadow-none
+                  data-[state=active]:border-primary
+                  rounded-md px-3 py-1 h-7
+                  mx-0.5 border border-transparent
+                  transition-colors
+                `}
               >
                 XML Response
               </TabsTrigger>

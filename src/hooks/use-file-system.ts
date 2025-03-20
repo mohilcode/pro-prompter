@@ -17,12 +17,8 @@ export function useFileSystem() {
       const options = { use_git_ignore: useGitIgnore }
       const result = await invoke<FileItem>('scan_directory', { path, options })
 
-      if (result.children) {
-        setFileTree(result.children)
-      } else {
-        setFileTree([])
-      }
-
+      // Include the root folder itself in the file tree, not just its children
+      setFileTree([result])
       setCurrentDirectory(path)
     } catch (err) {
       console.error('Error scanning directory:', err)
@@ -30,6 +26,15 @@ export function useFileSystem() {
       setFileTree([])
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const removeRootFolder = async (path: string) => {
+    setFileTree(prevTree => prevTree.filter(item => item.path !== path))
+
+    // If we're removing the current directory, reset it
+    if (currentDirectory === path) {
+      setCurrentDirectory(null)
     }
   }
 
@@ -85,6 +90,7 @@ export function useFileSystem() {
     isLoading,
     error,
     scanDirectory,
+    removeRootFolder,
     readFileContent,
     openDirectoryDialog,
     generateCopyContent,

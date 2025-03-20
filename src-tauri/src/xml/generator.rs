@@ -39,9 +39,7 @@ pub async fn generate_xml_prompt(file_paths: &[String], user_prompt: &str) -> Re
 
     xml.push_str("</file_contents>\n\n");
 
-    // Add XML formatting instructions
     xml.push_str("<xml_formatting_instructions>\n");
-    // XML formatting instructions omitted for brevity
     xml.push_str("</xml_formatting_instructions>\n\n");
 
     // Add user prompt

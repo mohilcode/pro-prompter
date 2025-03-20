@@ -1,5 +1,4 @@
 import { invoke } from '@tauri-apps/api/core'
-// src/hooks/use-xml-parser.ts
 import { useState } from 'react'
 import type { ChangeResult, FileChange } from '../types'
 
