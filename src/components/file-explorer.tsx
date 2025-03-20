@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronRight, File, Folder, X } from 'lucide-react'
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { cn } from '../lib/utils'
 import type { FileItem } from '../types'
 import { useTheme } from './theme-provider'
@@ -17,7 +17,7 @@ export function FileExplorer({
   data,
   selectedFiles,
   onSelectionChange,
-  onRemoveRootFolder
+  onRemoveRootFolder,
 }: FileExplorerProps) {
   return (
     <ScrollArea className="h-full">
@@ -53,38 +53,38 @@ function FileTreeNode({
   selectedFiles,
   onSelectionChange,
   onRemoveRootFolder,
-  isRootNode = false
+  isRootNode = false,
 }: FileTreeNodeProps) {
   const [expanded, setExpanded] = useState(level < 1)
   const { theme } = useTheme()
 
   // Determine if this is a folder
-  const isFolder = item.file_type === 'Directory';
+  const isFolder = item.file_type === 'Directory'
 
   // Get all file paths in this folder and its subfolders - using useMemo to avoid recalculation
   const allFilePaths = useMemo(() => {
     const getAllFilePaths = (node: FileItem): string[] => {
-      if (node.file_type === 'File') return [node.path];
-      return (node.children || []).flatMap(child => getAllFilePaths(child));
-    };
+      if (node.file_type === 'File') return [node.path]
+      return (node.children || []).flatMap(child => getAllFilePaths(child))
+    }
 
-    return isFolder ? getAllFilePaths(item) : [item.path];
-  }, [item, isFolder]);
+    return isFolder ? getAllFilePaths(item) : [item.path]
+  }, [item, isFolder])
 
   // Calculate checked and indeterminate states directly during render
-  let isChecked = false;
-  let isIndeterminate = false;
+  let isChecked = false
+  let isIndeterminate = false
 
   if (isFolder) {
     if (allFilePaths.length > 0) {
-      const allSelected = allFilePaths.every(path => selectedFiles.includes(path));
-      const someSelected = allFilePaths.some(path => selectedFiles.includes(path));
+      const allSelected = allFilePaths.every(path => selectedFiles.includes(path))
+      const someSelected = allFilePaths.some(path => selectedFiles.includes(path))
 
-      isChecked = allSelected;
-      isIndeterminate = someSelected && !allSelected;
+      isChecked = allSelected
+      isIndeterminate = someSelected && !allSelected
     }
   } else {
-    isChecked = selectedFiles.includes(item.path);
+    isChecked = selectedFiles.includes(item.path)
   }
 
   // Function to handle folder expansion/collapse
@@ -124,7 +124,7 @@ function FileTreeNode({
   // Handle removing a root folder
   const handleRemoveFolder = () => {
     if (onRemoveRootFolder) {
-      onRemoveRootFolder(item.path);
+      onRemoveRootFolder(item.path)
     }
   }
 
@@ -132,10 +132,10 @@ function FileTreeNode({
   const fileCount = useMemo(() => {
     if (isFolder && item.children) {
       // Count only the immediate files (not including subdirectories)
-      return item.children.filter(child => child.file_type === 'File').length;
+      return item.children.filter(child => child.file_type === 'File').length
     }
-    return 0;
-  }, [isFolder, item.children]);
+    return 0
+  }, [isFolder, item.children])
 
   return (
     <div>
@@ -166,9 +166,9 @@ function FileTreeNode({
           data-state={isIndeterminate ? 'indeterminate' : isChecked ? 'checked' : 'unchecked'}
           onCheckedChange={handleCheckboxChange}
           className={cn(
-            "mr-2 h-4 w-4 border-border",
-            "data-[state=checked]:bg-primary data-[state=checked]:border-primary",
-            "data-[state=indeterminate]:bg-primary/50 data-[state=indeterminate]:border-primary/50"
+            'mr-2 h-4 w-4 border-border',
+            'data-[state=checked]:bg-primary data-[state=checked]:border-primary',
+            'data-[state=indeterminate]:bg-primary/50 data-[state=indeterminate]:border-primary/50'
           )}
           aria-label={`Select ${item.name}`}
         />
@@ -180,7 +180,10 @@ function FileTreeNode({
           onKeyDown={handleKeyDown}
         >
           {isFolder ? (
-            <Folder size={14} className={cn("text-muted-foreground", isRootNode && "text-primary")} />
+            <Folder
+              size={14}
+              className={cn('text-muted-foreground', isRootNode && 'text-primary')}
+            />
           ) : (
             <File size={14} className="text-muted-foreground" />
           )}
@@ -192,7 +195,8 @@ function FileTreeNode({
               {formatFileSize(item.size)}
             </span>
           ) : (
-            isFolder && fileCount > 0 && (
+            isFolder &&
+            fileCount > 0 && (
               <span className="text-xs text-muted-foreground ml-auto">
                 {fileCount} {fileCount === 1 ? 'file' : 'files'}
               </span>

@@ -184,7 +184,8 @@ export function SimpleMode({ selectedFiles, currentPrompt, onPromptChange }: Sim
           </Button>
         </div>
 
-        <ScrollArea className="flex-1">
+        {/* Fix the ScrollArea to take up remaining height and properly scroll */}
+        <ScrollArea className="flex-1 h-0 min-h-0">
           <div className="p-3 space-y-3">
             {includePrompt && currentPrompt && (
               <Card className="bg-secondary/50 border-border rounded-none">

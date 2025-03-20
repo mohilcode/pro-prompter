@@ -45,7 +45,7 @@ async fn load_undo_history() -> Result<UndoHistory> {
 }
 
 fn get_undo_history_path() -> Result<PathBuf> {
-    let app_dir = directories::ProjectDirs::from("com", "repoprompt", "ProPrompter")
+    let app_dir = directories::ProjectDirs::from("com", "mohilcode", "proprompter")
         .context("Failed to determine app directories")?
         .data_dir()
         .to_path_buf();

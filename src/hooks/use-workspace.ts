@@ -112,15 +112,20 @@ export function useWorkspace() {
     setError(null)
 
     try {
+      // Fix the parameter name to match exactly what the backend expects
       const result = await invoke<WorkspaceFolder>('add_folder_to_workspace', {
-        workspace_id: workspaceId,
+        workspaceId, // Ensure this matches exactly with the Rust command parameter
         path,
         name,
       })
 
-      if (currentWorkspace?.id === workspaceId) {
-        const updated = await getWorkspace(workspaceId)
-        if (updated) setCurrentWorkspace(updated)
+      // Refresh the workspaces list
+      await fetchWorkspaces()
+
+      // Update the current workspace with the latest data
+      const updated = await getWorkspace(workspaceId)
+      if (updated) {
+        setCurrentWorkspace(updated)
       }
 
       return result

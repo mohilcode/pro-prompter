@@ -7,7 +7,7 @@ use super::Workspace;
 
 // Get the path to the workspaces file
 fn get_workspaces_file_path() -> Result<PathBuf> {
-    let app_dir = directories::ProjectDirs::from("com", "repoprompt", "ProPrompter")
+    let app_dir = directories::ProjectDirs::from("com", "mohilcode", "proprompter")
         .context("Failed to determine app directories")?
         .data_dir()
         .to_path_buf();

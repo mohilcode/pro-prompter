@@ -31,7 +31,7 @@ pub async fn create_backup(path: &str) -> Result<PathBuf> {
     }
 
     // Create a backup directory if it doesn't exist
-    let app_dir = directories::ProjectDirs::from("com", "repoprompt", "ProPrompter")
+    let app_dir = directories::ProjectDirs::from("com", "mohilcode", "proprompter")
         .context("Failed to determine app directories")?
         .data_dir()
         .to_path_buf();

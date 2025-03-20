@@ -1,3 +1,4 @@
+// Modified App.tsx with fixed types
 import { FolderPlus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { FileExplorer } from './components/file-explorer'
@@ -7,7 +8,8 @@ import { SimpleMode } from './components/simple-mode'
 import { ThemeProvider, useTheme } from './components/theme-provider'
 import { ThemeToggle } from './components/theme-toggle'
 import { Button } from './components/ui/button'
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from './components/ui/resizable'
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from './components/ui/resizable'
+import { WorkspaceSelector } from './components/workspace-selector'
 import { XmlMode } from './components/xml-mode'
 import { useFileSystem } from './hooks/use-file-system'
 import { useWorkspace } from './hooks/use-workspace'
@@ -18,10 +20,19 @@ function AppContent() {
   const [currentPrompt, setCurrentPrompt] = useState('')
   const [aiResponse, setAiResponse] = useState('')
   const { theme } = useTheme()
-  const { fileTree, openDirectoryDialog, currentDirectory, isLoading, removeRootFolder } = useFileSystem()
-  const { currentWorkspace, createWorkspace, addFolderToWorkspace, removeFolderFromWorkspace } = useWorkspace()
+  const { fileTree, openDirectoryDialog, isLoading, removeRootFolder, loadAllWorkspaceFolders } =
+    useFileSystem()
+  const {
+    currentWorkspace,
+    createWorkspace,
+    addFolderToWorkspace,
+    removeFolderFromWorkspace,
+    setCurrentWorkspace,
+    getWorkspace,
+    fetchWorkspaces,
+  } = useWorkspace()
 
-  // Add a new state for accent color
+  // Add a state for accent color
   const [accentColor, setAccentColor] = useState<'cyan' | 'crimson' | 'purple' | 'green' | 'gray'>(
     'cyan'
   )
@@ -38,34 +49,66 @@ function AppContent() {
   }, [accentColor])
 
   // Handle opening a new folder
+  // In App.tsx, update the handleOpenFolder function with more debugging and error handling
   const handleOpenFolder = async () => {
     const directory = await openDirectoryDialog()
-    if (directory && !currentWorkspace) {
-      // If no workspace is active, create one
-      const name = directory.split('/').pop() || 'New Workspace'
-      const workspace = await createWorkspace(name)
-      if (workspace) {
-        await addFolderToWorkspace(workspace.id, directory)
+    if (!directory) return
+
+    try {
+      let workspaceToUse = currentWorkspace
+
+      if (!workspaceToUse) {
+        const folderName = directory.split('/').pop() || 'New Workspace'
+
+        // 1) Create the new workspace
+        const created = await createWorkspace(folderName)
+        if (!created) {
+          console.error('Failed to create workspace')
+          return
+        }
+
+        // 2) Set as current workspace
+        workspaceToUse = created
+        setCurrentWorkspace(created)
+
+        // Wait a moment for state to update
+        await new Promise(resolve => setTimeout(resolve, 200))
       }
-    } else if (directory && currentWorkspace) {
-      // Add to existing workspace
-      await addFolderToWorkspace(currentWorkspace.id, directory)
+
+      // 3) Add the folder to the workspace
+      const addedFolder = await addFolderToWorkspace(workspaceToUse.id, directory)
+      if (!addedFolder) {
+        console.error('Failed to add folder to workspace')
+        return
+      }
+
+      // 4) Refresh workspaces and reload file tree
+      await fetchWorkspaces()
+
+      // Get a fresh instance of the workspace
+      const refreshedWorkspace = await getWorkspace(workspaceToUse.id)
+      if (refreshedWorkspace) {
+        setCurrentWorkspace(refreshedWorkspace)
+        await loadAllWorkspaceFolders(refreshedWorkspace)
+      }
+    } catch (error) {
+      console.error('Error in handleOpenFolder:', error)
     }
   }
 
   const handleRemoveRootFolder = async (path: string) => {
     // First remove from file tree
-    removeRootFolder(path);
+    removeRootFolder(path)
 
     // Then remove from workspace if applicable
     if (currentWorkspace) {
       // Find the folder in the workspace
-      const folder = currentWorkspace.folders.find(f => f.path === path);
+      const folder = currentWorkspace.folders.find(f => f.path === path)
       if (folder) {
-        await removeFolderFromWorkspace(currentWorkspace.id, folder.id);
+        await removeFolderFromWorkspace(currentWorkspace.id, folder.id)
       }
     }
-  };
+  }
 
   return (
     <main
@@ -93,9 +136,10 @@ function AppContent() {
           </div>
           <div className="flex items-center space-x-4">
             <span className="text-xs text-primary">{selectedFiles.length} files selected</span>
-            <span className="text-xs text-muted-foreground">
-              {currentDirectory ? `Directory: ${currentDirectory}` : 'No directory selected'}
-            </span>
+
+            {/* Add workspace selector */}
+            <WorkspaceSelector onOpenFolder={handleOpenFolder} />
+
             <div className="flex items-center gap-2">
               <div className="flex border border-border rounded-sm overflow-hidden">
                 <button
@@ -185,47 +229,52 @@ function AppContent() {
             <div
               className={`h-full flex flex-col overflow-hidden ${theme === 'dark' ? 'bg-[#0A0A0A]/90' : 'bg-[#f5f5f5]/90'}`}
             >
-          <div className="border-b border-border p-2 flex items-center justify-between">
-            <ModeToggle currentMode={mode} onModeChange={setMode} />
-            <div className="text-xs text-muted-foreground">
-              {currentWorkspace ? `Workspace: ${currentWorkspace.name}` : 'No workspace selected'}
+              <div className="border-b border-border p-2 flex items-center justify-between">
+                <ModeToggle currentMode={mode} onModeChange={setMode} />
+                <div className="text-xs text-muted-foreground">
+                  {currentWorkspace &&
+                    `Workspace: ${currentWorkspace.name} (${currentWorkspace.folders.length} folders)`}
+                </div>
+              </div>
+
+              <div className="flex-1 flex overflow-hidden">
+                <ResizablePanelGroup direction="horizontal">
+                  <ResizablePanel defaultSize={70}>
+                    <div className="h-full flex flex-col overflow-hidden">
+                      {mode === 'simple' ? (
+                        <SimpleMode
+                          selectedFiles={selectedFiles}
+                          currentPrompt={currentPrompt}
+                          onPromptChange={setCurrentPrompt}
+                        />
+                      ) : (
+                        <XmlMode
+                          selectedFiles={selectedFiles}
+                          currentPrompt={currentPrompt}
+                          onPromptChange={setCurrentPrompt}
+                          aiResponse={aiResponse}
+                          onAiResponseChange={setAiResponse}
+                        />
+                      )}
+                    </div>
+                  </ResizablePanel>
+
+                  <ResizableHandle withHandle />
+
+                  <ResizablePanel defaultSize={30} minSize={20}>
+                    <div
+                      className={`h-full border-l border-border flex flex-col overflow-hidden ${theme === 'dark' ? 'bg-[#0A0A0A]/80' : 'bg-[#f0f0f0]/80'}`}
+                      style={{ zIndex: 10 }}
+                    >
+                      <PromptLibrary
+                        currentPrompt={currentPrompt}
+                        onPromptChange={setCurrentPrompt}
+                      />
+                    </div>
+                  </ResizablePanel>
+                </ResizablePanelGroup>
+              </div>
             </div>
-          </div>
-
-          <div className="flex-1 flex overflow-hidden">
-            <ResizablePanelGroup direction="horizontal">
-              <ResizablePanel defaultSize={70}>
-                <div className="h-full flex flex-col overflow-hidden">
-                  {mode === 'simple' ? (
-                    <SimpleMode
-                      selectedFiles={selectedFiles}
-                      currentPrompt={currentPrompt}
-                      onPromptChange={setCurrentPrompt}
-                    />
-                  ) : (
-                    <XmlMode
-                      selectedFiles={selectedFiles}
-                      currentPrompt={currentPrompt}
-                      onPromptChange={setCurrentPrompt}
-                      aiResponse={aiResponse}
-                      onAiResponseChange={setAiResponse}
-                    />
-                  )}
-                </div>
-              </ResizablePanel>
-
-              <ResizableHandle withHandle />
-
-              <ResizablePanel defaultSize={30} minSize={20}>
-                <div
-                  className={`h-full border-l border-border flex flex-col overflow-hidden ${theme === 'dark' ? 'bg-[#0A0A0A]/80' : 'bg-[#f0f0f0]/80'}`}
-                >
-                  <PromptLibrary currentPrompt={currentPrompt} onPromptChange={setCurrentPrompt} />
-                </div>
-              </ResizablePanel>
-            </ResizablePanelGroup>
-          </div>
-        </div>
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>

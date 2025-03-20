@@ -1,13 +1,61 @@
+// src/hooks/use-file-system.ts
 import { invoke } from '@tauri-apps/api/core'
 import { open } from '@tauri-apps/plugin-dialog'
-import { useState } from 'react'
-import type { FileItem } from '../types'
+import { useEffect, useState } from 'react'
+import type { FileItem, Workspace } from '../types'
+import { useWorkspace } from './use-workspace'
 
 export function useFileSystem() {
-  const [currentDirectory, setCurrentDirectory] = useState<string | null>(null)
   const [fileTree, setFileTree] = useState<FileItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Get workspace information
+  const { currentWorkspace } = useWorkspace()
+
+  // Load all folders in current workspace when workspace changes
+  useEffect(() => {
+    if (currentWorkspace) {
+      loadAllWorkspaceFolders(currentWorkspace)
+    } else {
+      setFileTree([])
+    }
+  }, [currentWorkspace])
+
+  // Load all folders from a workspace
+  const loadAllWorkspaceFolders = async (workspace: Workspace) => {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      // Clear previous file tree
+      setFileTree([])
+
+      // Load each folder in the workspace
+      const newFileTree: FileItem[] = []
+
+      for (const folder of workspace.folders) {
+        try {
+          const options = { use_git_ignore: true }
+          const result = await invoke<FileItem>('scan_directory', {
+            path: folder.path,
+            options,
+          })
+          newFileTree.push(result)
+        } catch (err) {
+          console.error(`Error scanning directory ${folder.path}:`, err)
+          // Continue loading other folders even if one fails
+        }
+      }
+
+      setFileTree(newFileTree)
+    } catch (err) {
+      console.error('Error loading workspace folders:', err)
+      setError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const scanDirectory = async (path: string, useGitIgnore = true) => {
     setIsLoading(true)
@@ -17,13 +65,14 @@ export function useFileSystem() {
       const options = { use_git_ignore: useGitIgnore }
       const result = await invoke<FileItem>('scan_directory', { path, options })
 
-      // Include the root folder itself in the file tree, not just its children
-      setFileTree([result])
-      setCurrentDirectory(path)
+      // Instead of replacing the file tree, append the new directory
+      setFileTree(prevTree => [...prevTree, result])
+
+      return result
     } catch (err) {
       console.error('Error scanning directory:', err)
       setError(err instanceof Error ? err.message : String(err))
-      setFileTree([])
+      throw err
     } finally {
       setIsLoading(false)
     }
@@ -31,11 +80,6 @@ export function useFileSystem() {
 
   const removeRootFolder = async (path: string) => {
     setFileTree(prevTree => prevTree.filter(item => item.path !== path))
-
-    // If we're removing the current directory, reset it
-    if (currentDirectory === path) {
-      setCurrentDirectory(null)
-    }
   }
 
   const readFileContent = async (path: string): Promise<string> => {
@@ -56,7 +100,6 @@ export function useFileSystem() {
       })
 
       if (selected && !Array.isArray(selected)) {
-        await scanDirectory(selected)
         return selected
       }
     } catch (err) {
@@ -85,7 +128,6 @@ export function useFileSystem() {
   }
 
   return {
-    currentDirectory,
     fileTree,
     isLoading,
     error,
@@ -95,5 +137,6 @@ export function useFileSystem() {
     openDirectoryDialog,
     generateCopyContent,
     copyToClipboard,
+    loadAllWorkspaceFolders,
   }
 }
